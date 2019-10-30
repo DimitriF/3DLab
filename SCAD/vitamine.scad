@@ -285,10 +285,13 @@ endstop_out_x = 2;
 endstop_out_y_1 = 2;
 endstop_out_y_2 = 17;
 endstop_out_y_3 = 36;
-module endstop_neg() {
+module endstop_neg(simple=false) {
     union(){
-        translate([endstop_x/2-endstop_out_x,endstop_y/2-endstop_out_y_1]) cylinder(h=10*endstop_z,d=endstop_d,center=true);
+			if(!simple){
+				translate([endstop_x/2-endstop_out_x,endstop_y/2-endstop_out_y_1]) cylinder(h=10*endstop_z,d=endstop_d,center=true);
         translate([-endstop_x/2+endstop_out_x,endstop_y/2-endstop_out_y_1]) cylinder(h=10*endstop_z,d=endstop_d,center=true);
+			}
+        
         translate([endstop_x/2-endstop_out_x,endstop_y/2-endstop_out_y_2]) cylinder(h=10*endstop_z,d=endstop_d,center=true);
         translate([endstop_x/2-endstop_out_x,endstop_y/2-endstop_out_y_3]) cylinder(h=10*endstop_z,d=endstop_d,center=true);
     }

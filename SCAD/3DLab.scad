@@ -68,7 +68,11 @@ motor_Y_gap_Y = -prof_Y_gap+nema14_xy/2+prof_dim/2;
 motor_Y_gap_Z = -nema_axe_h/2+prof_dim+milling_thick;
 623_Y_gap_Z = motor_Y_gap_Z-10;
 623_Y_gap_Y = prof_Y_gap-prof_dim;
-rod_smooth_Y_gap_Z = motor_Y_gap_Z-5;
+rod_smooth_Y_gap_Z = -nema_axe_h/2+prof_dim+milling_thick-5;
+motor_Y_gap_Z_real = nema_axe_h/2-milling_thick;
+endstop_Y_Z = prof_dim-endstop_z/2-2;
+endstop_Y_Y = Y_dim/2-prof_dim-endstop_x/2-3;
+endstop_Y_X = 66;
 module Y_belt(){
     color("black")difference(){
         hull(){
@@ -89,7 +93,10 @@ module Y_M3s(rabio=0,Y=0){
         translate([3,Y+lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10]) cylinder(d=3+rabio,h=30+rabio,center=true);
         translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10]) cylinder(d=3+rabio,h=30+rabio,center=true);
         translate([3,Y+lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20]) cylinder(d=7+rabio,h=10+rabio,center=true);
-        translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20]) cylinder(d=7+rabio,h=10+rabio,center=true);
+        translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20]) cylinder(d=7+rabio,h=10+rabio,center=true);//Ymoving side
+        translate([3,Y+lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20-32]) cylinder(d=8,h=4,$fn=6,center=true);
+        translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20-32]) cylinder(d=8,h=4,$fn=6,center=true);
+        //Y belt side
     }
 }
 module Y_rods(rabio=0){
@@ -98,18 +105,18 @@ module Y_rods(rabio=0){
     }
 }
 module Y_axis(X=0,Y=0,Z=0){
-    color("pink")translate([motor_Y_gap_X,motor_Y_gap_Y,motor_Y_gap_Z]) rotate([-180,0,0]) nema17();
+    color("pink")translate([motor_Y_gap_X,motor_Y_gap_Y,motor_Y_gap_Z_real]) rotate([0,0,0]) nema17();
     Y_rods();
-    % translate([motor_Y_gap_X,motor_Y_gap_Y,motor_Y_gap_Z]) rotate([-180,0,0])gt2_pulley();
+    % translate([motor_Y_gap_X,motor_Y_gap_Y,motor_Y_gap_Z]) rotate([0,0,0])gt2_pulley();
     //color("yellow") translate([motor_Y_gap_X,Y-5,motor_Y_gap_Z]) rotate([-90,0,0]) translate([0,0,0]) rotate([0,0,0]) tr8_nut();
     for(i = [-1,1]){
         for(j = [-1,1]){
             color("pink")translate([i*rod_smooth_Y_gap_X,j*housing_lm8uu_L/2+Y,rod_smooth_Y_gap_Z]) rotate([90,0,0]) housing_lm8uu();
         }
     }
-    translate([70,Y_dim/2-prof_dim+endstop_x/2,prof_dim+endstop_z/2+5]) rotate([180,180,90]) endstop();
+    translate([endstop_Y_X,endstop_Y_Y,endstop_Y_Z]) rotate([0,180,90]) endstop();
     Y_belt();
-    Y_moving_spring(Y=Y);
+    Y_moving_spring(Y=Y,screw=false);
     Y_glass(Y=Y);
     
 Y_glass_holder(Y=Y);
@@ -117,12 +124,13 @@ Y_glass_holder(Y=Y);
 module Y_endstop_holder(){
 	difference(){
 		color("gold")union(){
-			translate([70,Y_dim/2+1,prof_dim/2+1]) cube([endstop_y,2,prof_dim+2],center=true);//body
-			translate([70,Y_dim/2-prof_dim/2+0.5,prof_dim+5/2]) cube([endstop_y,20+3,5],center=true);//link
+			translate([endstop_Y_X,Y_dim/2-1-prof_dim,prof_dim/2]) cube([endstop_y,2,prof_dim],center=true);//body
+			translate([endstop_Y_X,Y_dim/2-2-prof_dim-endstop_x/2,prof_dim-2-1-endstop_z]) cube([endstop_y,endstop_x+4,2],center=true);//link
+			translate([endstop_Y_X,Y_dim/2-2-prof_dim/2,-1]) cube([endstop_y,endstop_x+4,2],center=true);
 		}
 		union(){
 			M5s();
-			translate([70,Y_dim/2-prof_dim+endstop_x/2,prof_dim+endstop_z/2+5]) rotate([180,180,90]) endstop_neg();//endstop_neg();
+			translate([endstop_Y_X,endstop_Y_Y,endstop_Y_Z]) rotate([180,180,90]) endstop_neg();//endstop_neg();
 		}
 	}
 }
@@ -132,11 +140,11 @@ milling_thick_Y_motor = nema14_xy - prof_dim-2;
 module Y_motor(){
     color("gold")difference(){
         union(){
-            translate([0,-prof_Y_gap+prof_dim/2+milling_thick/2,prof_dim/2+milling_thick/2]) cube([rod_smooth_Y_gap_X*2+15,milling_thick,prof_dim+milling_thick],center=true);
-            translate([0,motor_Y_gap_Y,prof_dim+milling_thick/2]) cube([nema_xy,nema_xy,milling_thick],center=true);
+            translate([0,-prof_Y_gap+prof_dim/2+milling_thick/2,prof_dim/2-milling_thick/2]) cube([rod_smooth_Y_gap_X*2+15,milling_thick,prof_dim+milling_thick],center=true);
+            translate([0,motor_Y_gap_Y,-milling_thick/2]) cube([nema_xy,nema_xy,milling_thick],center=true);
             }
         M5s();
-        translate([motor_Y_gap_X,motor_Y_gap_Y,motor_Y_gap_Z]) rotate([180,0,0]) nema17_neg(rabio=rabio);
+        translate([motor_Y_gap_X,motor_Y_gap_Y,motor_Y_gap_Z_real]) rotate([0,0,0]) nema17_neg(rabio=rabio);
         translate([motor_Y_gap_X,motor_Y_gap_Y,-rabio]) union(){ // special to screw the head
             for(i = [-1,1]){for(j = [-1,1]){
                 translate([i*nema_vis_space,j*nema_vis_space,0]) cylinder(h=23+rabio,d=6+rabio,center=false);
@@ -175,7 +183,7 @@ module M4_Y_moving(rabio=rabio,nut=true){
 module Y_belt_holder(Y=0){
     color("gold")difference(){
         hull(){
-            translate([4,Y,623_Y_gap_Z-6])cube([14,30,1],center=true);
+            translate([4,Y,623_Y_gap_Z-6])cube([14,30,4],center=true);
             translate([4,Y,rod_smooth_Y_gap_Z-1/2+housing_lm8uu_H/2])cube([14,30,1],center=true);
         }
         translate([3,Y,623_Y_gap_Z])cube([7,30+rabio,7],center=true);
@@ -191,13 +199,16 @@ module M5_Y_moving(rabio=rabio,nut=true){
         }
     }
 }
-module Y_moving_spring(Y=0){
+module Y_moving_spring(Y=0,screw=true){
     for(i = [-1,1]){
         for(j = [-1,1]){
-            translate([i*(Y_moving_X-10)/2,j*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2]) cylinder(d=3.5,h=200,center=true);//M3
             translate([i*(Y_moving_X-10)/2,j*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2]) cylinder(d=8,h=Y_moving_thick,center=true);//spring
-            translate([i*(Y_moving_X-10)/2,j*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+housing_lm8uu_H/2]) cylinder(d=8,h=4,$fn=6,center=true);//m3 nut
-            translate([i*(Y_moving_X-10)/2,j*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+12.5]) cylinder(d=8,h=6,center=true);//m3 head
+            if(screw){
+                translate([i*(Y_moving_X-10)/2,j*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2]) cylinder(d=3.5,h=200,center=true);//M3
+                translate([i*(Y_moving_X-10)/2,j*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+housing_lm8uu_H/2]) cylinder(d=8,h=4,$fn=6,center=true);//m3 nut
+                translate([i*(Y_moving_X-10)/2,j*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+12.5]) cylinder(d=8,h=6,center=true);//m3 head
+            }
+            
         }
     }
 }
@@ -239,7 +250,7 @@ module Y_plate(X=0,Y=0,Z=0){
 }
 module Y_glass(X=0,Y=0,Z=0){
     color("blue",0.5) union(){
-        translate([0,Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+10+5/2+3.5/2]) cube([153,102,3.5],center=true);
+        translate([0,Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+10+5/2+3.5/2]) cube([153,153,3.5],center=true);
     }
 }
 module Y_glass_holder(X=0,Y=0,Z=0){
@@ -248,34 +259,39 @@ module Y_glass_holder(X=0,Y=0,Z=0){
         translate([1*(Y_moving_X-10)/2-12,-12+1*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+12.5]) rotate([0,0,45])cube([20,20,16],center=true);//45degree cutoff
         
         translate([1*(Y_moving_X-10)/2,1*(Y_moving_Y-10)/2+Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+12.5]) cylinder(d=9,h=100,center=true); // M3 and srping
-        translate([0,Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+10+5/2+3.5/2]) scale([1.01,1.01,1.005])cube([153,102,3.5],center=true);//Y_glass(Y=Y);
+        translate([0,Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+10+5/2+3.5/2]) scale([1.01,1.01,1.005])cube([153.1,151,3.51],center=true);//Y_glass(Y=Y);
         translate([0,Y,rod_smooth_Y_gap_Z+Y_moving_thick+housing_lm8uu_H/2+10]) scale([1.01,1.01,1.01])cube([Y_moving_X,Y_moving_Y,5],center=true);//Y_plate(Y=Y);
     }
         
 }
 // X_axis
-motor_X_gap_X = prof_X_gap+delrin_X/2+nema_xy/2+1;
+motor_X_gap_X = prof_X_gap+delrin_X/2+nema_xy/2+1+15;
 motor_X_gap_Y = prof_Z_gap_Y+10+nema_xy/2+delrin_Z/2+nema_axe_h/2;
 motor_X_gap_Z = Z_dim-prof_dim/2-45;
 rod_smooth_X_gap_X = 0;
 rod_smooth_X_gap_Y = motor_X_gap_Y; // in case of rod on the profile
 rod_smooth_X_gap_Z_bis = 45/2;
-delrin_gap_X = prof_X_gap;
+delrin_gap_X = prof_X_gap+15;
 delrin_gap_Z = -25;
 delrin_gap_Y = prof_Z_gap_Y+10+nema_xy/2;
 623_X_gap_Z = motor_X_gap_Z;
-623_X_gap_X = -delrin_gap_X-15;
+623_X_gap_X = -delrin_gap_X+15;
 623_X_gap_Y = motor_X_gap_Y;
+
 // Z_axis
 motor_Z_gap_X = delrin_gap_X;
 motor_Z_gap_Y = delrin_gap_Y;
 motor_Z_gap_Z = Z_dim-nema_axe_h/2+10;
 rod_smooth_Z_gap_X = motor_Z_gap_X;
 rod_smooth_Z_gap_Y = motor_X_gap_Y+15; // in case of rod on the profile
-rod_smooth_Z_gap_Z = 20;
-endstop_Z_Z = 20+endstop_x/2+20;
+rod_smooth_Z_gap_Z = 21;
+M3_endstop_Z_X = X_dim/2+10+endstop_z/2+5+10;
+endstop_Z_Z = 20+endstop_x/2;
 endstop_Z_Y = prof_Z_gap_Y+50;
 endstop_Z_screw_Y = endstop_Z_Y+10;
+endstop_X_Z = 8;
+endstop_X_Y = rod_smooth_Z_gap_Y-4;
+endstop_X_X = prof_X_gap-4;
 module X_belt(hole=false,Z=150){
    translate([0,0,Z])  if(!hole){
         color("black")difference(){
@@ -310,6 +326,7 @@ module X_axis(X=0,Y=0,Z=150){
     color("green") translate([X,motor_X_gap_Y+10,Z+23]) rotate([90,0,180]) import("Bowden_carriage.stl");
     color("green") translate([X,motor_X_gap_Y+60,Z+1.5+23]) rotate([90,0,0]) import("Bowden_carriage_clamp_FanMount.stl");
     color("red") translate([X-32,motor_X_gap_Y+30,Z-62+23]) rotate([90,0,90]) import("E3D_Volcano_1.75mm_0.8mm_Hotend_Assembly_fixed.STL");
+		color("green") translate([endstop_X_X,endstop_X_Y,Z+endstop_X_Z]) rotate([90,0,180]) endstop();
     difference(){
        // color("blue") translate([X-17.5,motor_X_gap_Y+47.5,Z-20]) cube([15,30,30],center=true);
     }
@@ -317,7 +334,7 @@ module X_axis(X=0,Y=0,Z=150){
    //color("blue") translate([X-17.5-30,motor_X_gap_Y+47.5,Z-20-20]) rotate([0,45,0])cube([10,30,30],center=true);
     
 }
-
+        
 module fan_cooler(X=0,Y=0,Z=0){
     color("gold") difference(){
         union(){            
@@ -337,22 +354,31 @@ module fan_cooler(X=0,Y=0,Z=0){
 }
 
 module X_motor(Z=150){
-    color("gold",1) difference(){
-        union(){
-            translate([motor_X_gap_X,motor_X_gap_Y-nema_axe_h/2+5,Z+4]) cube([nema_xy+3,10,nema_xy+5+2],center=true);
-            translate([delrin_gap_X,rod_smooth_X_gap_Y,Z-5]) cube([delrin_X,nema_axe_h,nema_xy+25],center=true);
-            translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z+2.5]) cylinder(d=lm8uu_OD+6,h=nema_xy+10,center=true);//lm8uu
-        }
-        translate([motor_X_gap_X,motor_X_gap_Y-nema_axe_h/2+5,Z])  rotate([-90,0,0]) nema17_neg();
-        for(i = [-1,1]){
-            translate([0,rod_smooth_X_gap_Y,Z+i*rod_smooth_X_gap_Z_bis]) rotate([0,90,0]) cylinder(d=rod_smooth_d+0.5,h=rod_smooth_X_h,center=true);// X smooth
-            translate([i*delrin_gap_X,delrin_gap_Y,Z+delrin_gap_Z]) rotate([-90,0,0]) delrin_neg();
-        }
-        X_belt(hole=true,Z=Z);//belt
-        translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z]) cylinder(d=lm8uu_OD,h=lm8uu_z*4,center=true);//lm8uu
-        translate([motor_Z_gap_X,motor_Z_gap_Y,Z_dim]) rotate([180,0,0]) cylinder(d=coupler_d+4,h=Z_dim-Z+5);
-        translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y+5,Z+2.5]) cube([2,lm8uu_OD+5,200],center=true);//lm8uu line cut
-    }
+	color("gold",1) difference(){
+		union(){
+			translate([motor_X_gap_X,motor_X_gap_Y-nema_axe_h/2+5,Z+4]) cube([nema_xy+3,10,nema_xy+5+2],center=true);
+			translate([delrin_gap_X,rod_smooth_X_gap_Y,Z-5]) cube([delrin_X,nema_axe_h,nema_xy+25],center=true);
+			translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z+2.5]) cylinder(d=lm8uu_OD+6,h=nema_xy+10,center=true);//lm8uu
+			hull(){ // z endstop screw hull
+				translate([M3_endstop_Z_X,endstop_Z_screw_Y,Z-nema_xy/2-15]) cylinder(d=10,h=3,center=true);
+				translate([M3_endstop_Z_X-10,endstop_Z_screw_Y-10,Z-nema_xy/2-15+15]) cylinder(d=10,h=3,center=true);
+			}
+			translate([endstop_X_X,endstop_X_Y-endstop_z/2-1,Z+2.5]) cube([endstop_x,2,(nema_xy+10)],center=true);
+		}
+		translate([motor_X_gap_X,motor_X_gap_Y-nema_axe_h/2+5,Z])  rotate([-90,0,0]) nema17_neg();
+		translate([motor_X_gap_X+nema_xy/3,motor_X_gap_Y-nema_axe_h/2+5,Z+4-nema_xy/2.5]) cube([nema_xy+3,11,nema_xy+5+2],center=true);
+		for(i = [-1,1]){
+			translate([0,rod_smooth_X_gap_Y,Z+i*rod_smooth_X_gap_Z_bis]) rotate([0,90,0]) cylinder(d=rod_smooth_d+0.5,h=rod_smooth_X_h,center=true);// X smooth
+			translate([i*delrin_gap_X,delrin_gap_Y,Z+delrin_gap_Z]) rotate([-90,0,0]) delrin_neg();
+		}
+		X_belt(hole=true,Z=Z);//belt
+		translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z]) cylinder(d=lm8uu_OD,h=lm8uu_z*4,center=true);//lm8uu
+		translate([motor_Z_gap_X,motor_Z_gap_Y,Z_dim]) rotate([180,0,0]) cylinder(d=coupler_d+4,h=Z_dim-Z+5);
+		translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y+5,Z+2.5]) cube([2,lm8uu_OD+5,200],center=true);//lm8uu line cut
+		translate([M3_endstop_Z_X,endstop_Z_screw_Y,Z-nema_xy/2-15]) cylinder(d=3.4,h=30,center=true); // z endstop screw
+		translate([endstop_X_X,endstop_X_Y,Z+endstop_X_Z]) rotate([90,0,180]) endstop_neg(simple=true);
+		translate([endstop_X_X,endstop_X_Y,Z]) cube([endstop_x+0.1,endstop_z+0.1,300],center=true);
+	}
 }
 
 module X_end(Z=150){
@@ -374,29 +400,23 @@ module X_end(Z=150){
                 translate([-rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y+5,Z+2.5]) cube([2,lm8uu_OD+5,200],center=true);//lm8uu line cut
     }
 }
-module X_endstop(Z=200){
-    difference(){
-        translate([-rod_smooth_Z_gap_X+20,rod_smooth_Z_gap_Y,Z]) rotate([-90,0,0]) endstop();
-    }
-}
-
 module Z_axis(Z=150){
-    for(i = [-1,1]){
-        translate([i*rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,rod_smooth_Z_gap_Z]) cylinder(d=rod_smooth_d,h=rod_smooth_X_h,center=false);// Z smooth
-        translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z]) rotate([180,0,0]) nema17();
-        translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z-nema_axe_h/2]) rotate([180,0,0]) cylinder(d=8,h=rod_Z_h,center=false);
-        translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z-nema_axe_h/2]) rotate([180,0,0]) coupler();
-        translate([i*rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z]) cylinder(d=lm8uu_OD,h=lm8uu_z*2,center=true);
-        translate([X_dim/2+10+endstop_z/2,endstop_Z_Y,endstop_Z_Z]) rotate([0,-90,180]) endstop();
-        translate([X_dim/2+10+endstop_z/2,endstop_Z_screw_Y,Z-nema_xy/2-15]) cylinder(d=3.5,h=31,center=true);
-    }
+	for(i = [-1,1]){
+		translate([i*rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,rod_smooth_Z_gap_Z]) cylinder(d=rod_smooth_d,h=rod_smooth_X_h,center=false);// Z smooth
+		translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z]) rotate([180,0,0]) nema17();
+		translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z-nema_axe_h/2]) rotate([180,0,0]) cylinder(d=8,h=rod_Z_h,center=false);
+		translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z-nema_axe_h/2]) rotate([180,0,0]) coupler();
+		translate([i*rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z]) cylinder(d=lm8uu_OD,h=lm8uu_z*2,center=true);
+		translate([M3_endstop_Z_X,endstop_Z_Y,endstop_Z_Z]) rotate([0,-90,180]) endstop();
+		translate([M3_endstop_Z_X,endstop_Z_screw_Y,Z-nema_xy/2-15]) cylinder(d=3.5,h=31,center=true); // z endstop screw
+	}
 }
 
 module Z_motor(){
     color("gold") for(i = [-1,1]){
         difference(){
             union(){
-                translate([i*(motor_Z_gap_X-15),prof_Z_gap_Y,Z_dim+5]) cube([nema_xy+30,20,10],center=true);
+                translate([i*(motor_Z_gap_X-20),prof_Z_gap_Y,Z_dim+5]) cube([nema_xy+40,20,10],center=true);
                 translate([i*motor_Z_gap_X,motor_Z_gap_Y,Z_dim+5]) cube([nema_xy,nema_xy+1,10],center=true);
                 translate([i*motor_Z_gap_X,rod_smooth_Z_gap_Y,Z_dim+5]) cube([15,15+10,10],center=true);
             }
@@ -407,15 +427,21 @@ module Z_motor(){
     }
 }
 module Z_end(){
-    color("gold") for(i = [-1,1]){
-        difference(){
-            union(){
-                translate([i*(motor_Z_gap_X),prof_Z_gap_Y+30+10,20+5]) cube([20,60,10],center=true);
-            }
-            translate([i*rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,rod_smooth_Z_gap_Z]) cylinder(d=rod_smooth_d+rabio,h=rod_smooth_X_h,center=false);// Z smooth
-            translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z-nema_axe_h/2]) rotate([180,0,0]) cylinder(d=11,h=300,center=false);
-        }
-    }
+	color("gold") for(i = [-1,1]){
+		difference(){
+			union(){
+				translate([i*(motor_Z_gap_X),prof_Z_gap_Y+30+10,20+5]) cube([20,60,10],center=true);
+				translate([i*(motor_Z_gap_X-15),prof_Z_gap_Y+30+10,20+5]) cube([20,60,10],center=true);
+				if(i == 1){
+					translate([i*(motor_Z_gap_X+15),prof_Z_gap_Y+30+10,20+5+3.5]) cube([10,60,17],center=true);
+				}					
+			}
+			translate([i*rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,rod_smooth_Z_gap_Z]) cylinder(d=rod_smooth_d+rabio,h=rod_smooth_X_h,center=false);// Z smooth
+			translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z-nema_axe_h/2]) rotate([180,0,0]) cylinder(d=11,h=300,center=false);
+			translate([i*(motor_Z_gap_X+15),prof_Z_gap_Y+30-17,20+5]) cube([40.1,60,40],center=true);
+			translate([M3_endstop_Z_X+20,endstop_Z_Y,endstop_Z_Z]) rotate([0,-90,180]) endstop_neg();
+		}        
+	}
 }
 
 module Z_endstop(X=0,Y=0,Z=0){
@@ -476,8 +502,8 @@ module M5s(real = false){
 				
 				// Y enstop
        // translate([70,Y_dim/2-prof_dim+endstop_x/2,prof_dim+endstop_z/2+5]) rotate([180,180,90])
-        translate([70+10,Y_dim/2,10]) rotate([-90,0,0]) M5();
-        translate([70-10,Y_dim/2,10]) rotate([-90,0,0]) M5();
+        translate([endstop_Y_X,Y_dim/2-10,0]) rotate([180,0,0]) M5();
+        //translate([-X_dim/2+40,Y_dim/2-20,10]) rotate([90,0,0]) M5();
         // Z_endstop
         translate([X_dim/2,prof_Z_gap_Y,30]) rotate([0,90,0]) M5();
         translate([X_dim/2,prof_Z_gap_Y,50]) rotate([0,90,0]) M5();
@@ -521,7 +547,7 @@ module elec(){
     union(){
        //translate([40.5,-54.6,0]) rotate([0,0,0])  import("Arduino_Mega_2560.STL");
         translate([-35,-295/2-60,40]) import("Raspberry_Pi_3.STL");
-        rpi_neg();
+        //rpi_neg();
         translate([0,(-295-73-1)/2,(38.5+1)/2-14+5]) cube([169+1.05,73+1.05,38.5+1.05],center=true);
         //arduino_neg();
         
@@ -606,7 +632,7 @@ module full_view(X=0,Y=0,Z=0){
     X_end(Z=Z);
     Z_motor();
     Z_end();
-    Z_endstop(X=X,Y=Y,Z=Z);
+    //Z_endstop(X=X,Y=Y,Z=Z);
     M5s();
     LCD_holder();
     tool_holder();
@@ -618,7 +644,7 @@ module full_view(X=0,Y=0,Z=0){
  
 
 //camera_holder();
-full_view(X=-65,Y=50,Z=220);
+full_view(X=75,Y=75,Z=100);
 //Y_endstop_holder();
 //arduino_holder();
  // elec_holder();
