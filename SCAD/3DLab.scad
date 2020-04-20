@@ -2,7 +2,7 @@ include <vitamine.scad>
 nema14_z = 36;
 nema_axe_h = 22;
 
-rabio=1;
+rabio=0.75;
 
 // Position, may be in the full view more
 //X = $t*100-50;
@@ -32,7 +32,7 @@ tr8_nut_inside_A = 180; //put to 180 to see it inside, 0 outside
 tr8_nut_inside_h = tr8_nut_h2;//put to tr8_nut_h2 to see it inside, 0 outside
 
 
-prof_X_gap = X_dim/2 - prof_dim/2;
+prof_X_gap = X_dim/2 - prof_dim/2; //117.5
 prof_Y_gap = Y_dim/2 - prof_dim/2;
 prof_Z_gap_Y = -95;//prof_Y_gap - 100 - 50;
 prof_verticale_gap_1 = prof_dim/2;
@@ -41,6 +41,61 @@ profs_X = X_dim- prof_dim*2;
 profs_Y = Y_dim- prof_dim*2;
 profs_Z = Z_dim- prof_dim*2;
 //profs_diag = sqrt(2)*profs_Z;
+
+// Y_axis, 
+rod_smooth_Y_gap_X = rod_smooth_d*2.5+nema14_xy/2;
+motor_Y_gap_X = 0;
+motor_Y_gap_Y = -prof_Y_gap+nema14_xy/2+prof_dim/2;
+motor_Y_gap_Z = -nema_axe_h/2+prof_dim+milling_thick;
+623_Y_gap_Z = motor_Y_gap_Z-10;
+623_Y_gap_Y = prof_Y_gap-prof_dim;
+rod_smooth_Y_gap_Z = -nema_axe_h/2+prof_dim+milling_thick-5;
+motor_Y_gap_Z_real = nema_axe_h/2-milling_thick;
+endstop_Y_Z = prof_dim+endstop_z/2+4;
+endstop_Y_Y = Y_dim/2-prof_dim+endstop_x/2+10;
+endstop_Y_X = 66;
+
+Y_motor_Y_gap = -prof_Y_gap+prof_dim/2+milling_thick/2;
+milling_thick_Y_motor = nema14_xy - prof_dim-2;
+
+// Y_moving
+Y_moving_thick=10;
+Y_moving_X = 170;
+Y_moving_Y=110;
+Y_moving_top_Z = rod_smooth_Y_gap_Z+lm8uu_OD/2+Y_moving_thick/2*Y_dim_min; // change Y_dim_min at begining to get higher plate level
+
+// X_axis
+// motor position, from 2020:
+// delrin_gap_X + name_xy/2 - X_dim/2 = 26.15
+motor_X_gap_X = prof_X_gap+delrin_X/2+nema_xy/2+1+15;
+motor_X_gap_Y = prof_Z_gap_Y+10+nema_xy/2+delrin_Z/2+nema_axe_h/2;
+motor_X_gap_Z = Z_dim-prof_dim/2-45;
+rod_smooth_X_gap_X = 0;
+rod_smooth_X_gap_Y = motor_X_gap_Y; // in case of rod on the profile
+rod_smooth_X_gap_Z_bis = 45/2;
+delrin_gap_X = prof_X_gap+15; //132.5
+delrin_gap_Z = -25;
+delrin_gap_Y = prof_Z_gap_Y+10+nema_xy/2;
+623_X_gap_Z = motor_X_gap_Z;
+623_X_gap_X = -delrin_gap_X+15;
+623_X_gap_Y = motor_X_gap_Y;
+
+// Z_axis
+motor_Z_gap_X = delrin_gap_X;
+motor_Z_gap_Y = delrin_gap_Y;
+motor_Z_gap_Z = Z_dim-nema_axe_h/2+10;
+rod_smooth_Z_gap_X = motor_Z_gap_X;
+rod_smooth_Z_gap_Y = motor_X_gap_Y+15; // in case of rod on the profile
+rod_smooth_Z_gap_Z = 21;
+M3_endstop_Z_X = X_dim/2+10+endstop_z/2+5+10;
+endstop_Z_Z = 20+endstop_x/2;
+endstop_Z_Y = prof_Z_gap_Y+50;
+endstop_Z_screw_Y = endstop_Z_Y+10;
+endstop_X_Z = 8;
+endstop_X_Y = rod_smooth_Z_gap_Y-4;
+endstop_X_X = prof_X_gap-4;
+
+
 module profs(){
     union(){
         for(i = [-1,1]){
@@ -61,18 +116,16 @@ module profs(){
         }
 }
 
-// Y_axis, 
-rod_smooth_Y_gap_X = rod_smooth_d*2.5+nema14_xy/2;
-motor_Y_gap_X = 0;
-motor_Y_gap_Y = -prof_Y_gap+nema14_xy/2+prof_dim/2;
-motor_Y_gap_Z = -nema_axe_h/2+prof_dim+milling_thick;
-623_Y_gap_Z = motor_Y_gap_Z-10;
-623_Y_gap_Y = prof_Y_gap-prof_dim;
-rod_smooth_Y_gap_Z = -nema_axe_h/2+prof_dim+milling_thick-5;
-motor_Y_gap_Z_real = nema_axe_h/2-milling_thick;
-endstop_Y_Z = prof_dim-endstop_z/2-2;
-endstop_Y_Y = Y_dim/2-prof_dim-endstop_x/2-3;
-endstop_Y_X = 66;
+module feet(){
+	for(i = [-1,1]){for(j = [-1,1]){
+		difference(){
+			translate([i*prof_X_gap,j*prof_X_gap,-60/2]) cube([20,20,60],center=true);
+			translate([i*prof_X_gap,j*prof_X_gap,-60/2-5]) cylinder(h=60,d=12,center=true);
+			translate([i*prof_X_gap,j*prof_X_gap,-60/2+5]) cylinder(h=60,d=6,center=true);
+		}
+	}}
+}
+
 module Y_belt(){
     color("black")difference(){
         hull(){
@@ -94,9 +147,9 @@ module Y_M3s(rabio=0,Y=0){
         translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10]) cylinder(d=3+rabio,h=30+rabio,center=true);
         translate([3,Y+lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20]) cylinder(d=7+rabio,h=10+rabio,center=true);
         translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20]) cylinder(d=7+rabio,h=10+rabio,center=true);//Ymoving side
-        translate([3,Y+lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20-32]) cylinder(d=8,h=4,$fn=6,center=true);
-        translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20-32]) cylinder(d=8,h=4,$fn=6,center=true);
-        //Y belt side
+        translate([3,Y+lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20-32]) cylinder(d=7,h=4,$fn=6,center=true);//Y belt side
+        translate([3,Y-lm8uu_OD/2,rod_smooth_Y_gap_Z+lm8uu_OD/2+2-10+20-32]) cylinder(d=7,h=4,$fn=6,center=true);//Y belt side
+        
     }
 }
 module Y_rods(rabio=0){
@@ -114,7 +167,7 @@ module Y_axis(X=0,Y=0,Z=0){
             color("pink")translate([i*rod_smooth_Y_gap_X,j*housing_lm8uu_L/2+Y,rod_smooth_Y_gap_Z]) rotate([90,0,0]) housing_lm8uu();
         }
     }
-    translate([endstop_Y_X,endstop_Y_Y,endstop_Y_Z]) rotate([0,180,90]) endstop();
+    translate([endstop_Y_X,endstop_Y_Y,endstop_Y_Z]) rotate([180,180,90]) endstop();
     Y_belt();
     Y_moving_spring(Y=Y,screw=false);
     Y_glass(Y=Y);
@@ -124,9 +177,9 @@ Y_glass_holder(Y=Y);
 module Y_endstop_holder(){
 	difference(){
 		color("gold")union(){
-			translate([endstop_Y_X,Y_dim/2-1-prof_dim,prof_dim/2]) cube([endstop_y,2,prof_dim],center=true);//body
-			translate([endstop_Y_X,Y_dim/2-2-prof_dim-endstop_x/2,prof_dim-2-1-endstop_z]) cube([endstop_y,endstop_x+4,2],center=true);//link
-			translate([endstop_Y_X,Y_dim/2-2-prof_dim/2,-1]) cube([endstop_y,endstop_x+4,2],center=true);
+			//translate([endstop_Y_X,Y_dim/2-1-prof_dim,prof_dim/2]) cube([endstop_y,2,prof_dim],center=true);//body
+			translate([endstop_Y_X-endstop_y/6,endstop_Y_Y,20+2]) cube([endstop_y*0.66,endstop_x,4],center=true);//link
+			translate([endstop_Y_X-endstop_y/6,Y_dim/2+2,10+2]) cube([endstop_y*0.66,2,20+4],center=true);
 		}
 		union(){
 			M5s();
@@ -135,8 +188,6 @@ module Y_endstop_holder(){
 	}
 }
 
-Y_motor_Y_gap = -prof_Y_gap+prof_dim/2+milling_thick/2;
-milling_thick_Y_motor = nema14_xy - prof_dim-2;
 module Y_motor(){
     color("gold")difference(){
         union(){
@@ -167,11 +218,7 @@ module Y_end(){
     }
 }
 
-// Y_moving
-Y_moving_thick=10;
-Y_moving_X = 170;
-Y_moving_Y=110;
-Y_moving_top_Z = rod_smooth_Y_gap_Z+lm8uu_OD/2+Y_moving_thick/2*Y_dim_min; // change Y_dim_min at begining to get higher plate level
+
 module M4_Y_moving(rabio=rabio,nut=true){
     translate([0,0,rabio/2]) union(){
         rotate([0,180,0])cylinder(d=8+rabio,h=Y_moving_thick/2+rabio);
@@ -231,7 +278,7 @@ module Y_moving(X=0,Y=0,Z=0){
         }
     }
 }
-
+//Y_moving_spring();
 module Y_plate(X=0,Y=0,Z=0){
     difference(){
         color("gold") union(){
@@ -264,34 +311,7 @@ module Y_glass_holder(X=0,Y=0,Z=0){
     }
         
 }
-// X_axis
-motor_X_gap_X = prof_X_gap+delrin_X/2+nema_xy/2+1+15;
-motor_X_gap_Y = prof_Z_gap_Y+10+nema_xy/2+delrin_Z/2+nema_axe_h/2;
-motor_X_gap_Z = Z_dim-prof_dim/2-45;
-rod_smooth_X_gap_X = 0;
-rod_smooth_X_gap_Y = motor_X_gap_Y; // in case of rod on the profile
-rod_smooth_X_gap_Z_bis = 45/2;
-delrin_gap_X = prof_X_gap+15;
-delrin_gap_Z = -25;
-delrin_gap_Y = prof_Z_gap_Y+10+nema_xy/2;
-623_X_gap_Z = motor_X_gap_Z;
-623_X_gap_X = -delrin_gap_X+15;
-623_X_gap_Y = motor_X_gap_Y;
 
-// Z_axis
-motor_Z_gap_X = delrin_gap_X;
-motor_Z_gap_Y = delrin_gap_Y;
-motor_Z_gap_Z = Z_dim-nema_axe_h/2+10;
-rod_smooth_Z_gap_X = motor_Z_gap_X;
-rod_smooth_Z_gap_Y = motor_X_gap_Y+15; // in case of rod on the profile
-rod_smooth_Z_gap_Z = 21;
-M3_endstop_Z_X = X_dim/2+10+endstop_z/2+5+10;
-endstop_Z_Z = 20+endstop_x/2;
-endstop_Z_Y = prof_Z_gap_Y+50;
-endstop_Z_screw_Y = endstop_Z_Y+10;
-endstop_X_Z = 8;
-endstop_X_Y = rod_smooth_Z_gap_Y-4;
-endstop_X_X = prof_X_gap-4;
 module X_belt(hole=false,Z=150){
    translate([0,0,Z])  if(!hole){
         color("black")difference(){
@@ -358,7 +378,7 @@ module X_motor(Z=150){
 		union(){
 			translate([motor_X_gap_X,motor_X_gap_Y-nema_axe_h/2+5,Z+4]) cube([nema_xy+3,10,nema_xy+5+2],center=true);
 			translate([delrin_gap_X,rod_smooth_X_gap_Y,Z-5]) cube([delrin_X,nema_axe_h,nema_xy+25],center=true);
-			translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z+2.5]) cylinder(d=lm8uu_OD+6,h=nema_xy+10,center=true);//lm8uu
+			translate([rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z+2.5]) cylinder(d=lm8uu_OD+4,h=nema_xy+10,center=true);//lm8uu
 			hull(){ // z endstop screw hull
 				translate([M3_endstop_Z_X,endstop_Z_screw_Y,Z-nema_xy/2-15]) cylinder(d=10,h=3,center=true);
 				translate([M3_endstop_Z_X-10,endstop_Z_screw_Y-10,Z-nema_xy/2-15+15]) cylinder(d=10,h=3,center=true);
@@ -385,7 +405,7 @@ module X_end(Z=150){
     color("gold") difference(){
         union(){
             translate([-delrin_gap_X,rod_smooth_X_gap_Y,Z-5]) cube([delrin_X,nema_axe_h,nema_xy+25],center=true);
-            translate([-rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z+2.5]) cylinder(d=lm8uu_OD+6,h=nema_xy+10,center=true);//lm8uu
+            translate([-rod_smooth_Z_gap_X,rod_smooth_Z_gap_Y,Z+2.5]) cylinder(d=lm8uu_OD+4,h=nema_xy+10,center=true);//lm8uu
         }
         translate([motor_X_gap_X,motor_X_gap_Y-nema_axe_h/2+5,Z])  rotate([-90,0,0]) nema17_neg();
         for(i = [-1,1]){
@@ -440,6 +460,7 @@ module Z_end(){
 			translate([i*motor_Z_gap_X,motor_Z_gap_Y,motor_Z_gap_Z-nema_axe_h/2]) rotate([180,0,0]) cylinder(d=11,h=300,center=false);
 			translate([i*(motor_Z_gap_X+15),prof_Z_gap_Y+30-17,20+5]) cube([40.1,60,40],center=true);
 			translate([M3_endstop_Z_X+20,endstop_Z_Y,endstop_Z_Z]) rotate([0,-90,180]) endstop_neg();
+			M5s();
 		}        
 	}
 }
@@ -502,7 +523,7 @@ module M5s(real = false){
 				
 				// Y enstop
        // translate([70,Y_dim/2-prof_dim+endstop_x/2,prof_dim+endstop_z/2+5]) rotate([180,180,90])
-        translate([endstop_Y_X,Y_dim/2-10,0]) rotate([180,0,0]) M5();
+        translate([endstop_Y_X-endstop_y/6,Y_dim/2,10]) rotate([-90,0,0]) M5();
         //translate([-X_dim/2+40,Y_dim/2-20,10]) rotate([90,0,0]) M5();
         // Z_endstop
         translate([X_dim/2,prof_Z_gap_Y,30]) rotate([0,90,0]) M5();
@@ -642,10 +663,10 @@ module full_view(X=0,Y=0,Z=0){
     arduino_holder();
  }
  
-
+//feet();
 //camera_holder();
-full_view(X=75,Y=75,Z=100);
-//Y_endstop_holder();
+//full_view(X=75,Y=80,Z=100);
+Y_endstop_holder();
 //arduino_holder();
  // elec_holder();
 //Y_moving();
@@ -653,10 +674,11 @@ full_view(X=75,Y=75,Z=100);
 //Y_belt_holder();
 //X_moving();
 //Y_end();
-//X_end();
 //Y_motor();
- //Z_motor();
+//Z_motor();
+ //Z_end();
 //X_motor();
+//X_end();
  //Z_endstop(X=X,Y=Y,Z=Z);
  //LCD_holder();
  //tool_holder();
